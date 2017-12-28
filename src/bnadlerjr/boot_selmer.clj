@@ -1,11 +1,11 @@
 (ns bnadlerjr.boot-selmer
   {:boot/export-tasks true}
-  (require [boot.core :as core]
-           [boot.util :as util]
-           [clojure.edn :as edn]
-           [clojure.java.io :as io]
-           [clojure.string :as s]
-           [selmer.parser :refer [render-file]]))
+  (:require [boot.core :as core]
+            [boot.util :as util]
+            [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [clojure.string :as s]
+            [selmer.parser :refer [render-file]]))
 
 (defn- selmer->html
   [path]
