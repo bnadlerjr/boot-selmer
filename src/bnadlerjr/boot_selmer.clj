@@ -34,8 +34,17 @@
   underscore are considered to be partials loaded by the other files."
   [x context VAL str "Filename of .edn file that contains a context map that
                       will be injected into templates."
-   f filters VAL str "Filename of .edn file that contains a map of filter keywords to filter function symbols."]
+   f filters VAL str "Filename of .edn file that contains a map of filter keywords to filter function symbols."
+   c cache bool "Indicate whether selmer should cache compiled templates. Defaults to true."]
   (let [tmp (core/tmp-dir!)]
+    (when-not (nil? cache)
+      (if cache
+        (do
+          (util/info "Turning Selmer cache ON\n")
+          (selmer.parser/cache-on!))
+        (do
+          (util/info "Turning Selmer cache OFF\n")
+          (selmer.parser/cache-off!))))
     (fn middleware [next-handler]
       (fn handler [fileset]
         (core/empty-dir! tmp)
@@ -55,7 +64,7 @@
               (when (not (s/starts-with? (.getName in-file) "_"))
                 (compile-selmer! in-file out-file context)
                 (util/info "• %s\n" (.getName out-file))))))
-          (-> fileset
-              (core/add-resource tmp)
-              core/commit!
-              next-handler)))))
+        (-> fileset
+            (core/add-resource tmp)
+            core/commit!
+            next-handler)))))
