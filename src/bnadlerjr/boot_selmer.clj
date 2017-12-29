@@ -5,6 +5,7 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as s]
+            [selmer.filters :refer [add-filter!]]
             [selmer.parser :refer [render-file]]))
 
 (defn- selmer->html
@@ -19,7 +20,7 @@
                        context
                        :custom-resource-path (.getParent in-file)))))
 
-(defn- load-context-file
+(defn- load-config-file
   [path]
   (when (and path
              (.exists (io/as-file path)))
@@ -31,16 +32,23 @@
   Takes all files ending in .selmer and compiles them, ignoring files that
   start with an underscore. Files with a .selmer extension that start with a
   underscore are considered to be partials loaded by the other files."
-  [_ config VAL str "Filename of .edn file that contains a context map that
-                    will be injected into templates"]
+  [x context VAL str "Filename of .edn file that contains a context map that
+                      will be injected into templates."
+   f filters VAL str "Filename of .edn file that contains a map of filter keywords to filter function symbols."]
   (let [tmp (core/tmp-dir!)]
     (fn middleware [next-handler]
       (fn handler [fileset]
         (core/empty-dir! tmp)
         (let [in-files (core/input-files fileset)
               selmer-files (core/by-ext [".selmer"] in-files)
-              context (load-context-file config)]
+              context (load-config-file context)
+              filters (load-config-file filters)]
           (util/info "Compiling Selmer templates...\n")
+          (when filters
+            (doseq [[name filter] filters]
+              (when-let [fns (namespace filter)]
+                (require fns))
+              (add-filter! name (resolve filter))))
           (doseq [in selmer-files]
             (let [in-file (core/tmp-file in)
                   out-file (io/file tmp (selmer->html (core/tmp-path in)))]
