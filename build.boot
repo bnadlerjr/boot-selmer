@@ -1,7 +1,11 @@
 (set-env!
- :src-paths    #{"src"}
+ :source-paths #{"src"}
  :dependencies '[[adzerk/bootlaces "0.1.11" :scope "test"]
+                 [onetom/boot-lein-generate "0.1.3" :scope "test"]
                  [selmer "1.10.7"]])
+
+(require '[boot.lein])
+(boot.lein/generate)
 
 (require '[adzerk.bootlaces :refer :all])
 
